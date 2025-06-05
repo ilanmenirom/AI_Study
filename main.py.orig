@@ -63,10 +63,17 @@ def main():
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
+<<<<<<< HEAD
+
+    # Initialize datasets
+    train_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=True,window_span_for_volatile=5)
+    val_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=False,window_span_for_volatile=5)
+=======
     seq_len = 4
     # Initialize datasets
-    train_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=True,seq_len=seq_len,window_span_for_volatile=5)
-    val_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=False,seq_len=seq_len,window_span_for_volatile=5)
+    train_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=True,seq_len=seq_len)
+    val_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=False,seq_len=seq_len)
+>>>>>>> main
     
     # Create data loaders
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
