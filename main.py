@@ -63,10 +63,10 @@ def main():
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
-    
+
     # Initialize datasets
-    train_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=True)
-    val_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=False)
+    train_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=True,window_span_for_volatile=5)
+    val_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=False,window_span_for_volatile=5)
     
     # Create data loaders
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
@@ -80,7 +80,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     
     # Train the model
-    # train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, device=device)
+    train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, device=device)
 
 if __name__ == '__main__':
     main()
