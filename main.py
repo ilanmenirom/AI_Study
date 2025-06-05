@@ -18,7 +18,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         model.train()
         train_losses = []
         
-        for batch_x, batch_y in tqdm(train_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Training'):
+        for batch_x, batch_y,_ in tqdm(train_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Training'):
             # batch_x shape is: [batch_size,T,num of stocks * num_of_features]
             # batch_y shape is: [batch_size,T,num of stocks]
             batch_x, batch_y = batch_x.to(device), batch_y.to(device)
@@ -37,7 +37,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         val_losses = []
         
         with torch.no_grad():
-            for batch_x, batch_y in tqdm(val_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Validation'):
+            for batch_x, batch_y,_ in tqdm(val_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Validation'):
                 batch_x, batch_y = batch_x.to(device), batch_y.to(device)
                 
                 outputs = model(batch_x)

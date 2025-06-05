@@ -77,5 +77,5 @@ class TemporalDataset(Dataset):
         #TODO: make overlap a hyper parameter in the c'tor and return x,y accordginly
         x = torch.FloatTensor(self.features[idx * self.seq_len : ((idx+ 1) * self.seq_len),:])
         y = torch.FloatTensor(np.array(self.targets[idx * self.seq_len : ((idx+ 1) * self.seq_len)]))
-         vol = torch.FloatTensor(np.array(self.volatiles[idx * self.seq_len : ((idx+ 1) * self.seq_len)]))
+        vol = torch.FloatTensor(np.array(self.volatiles[idx * self.seq_len : ((idx+ 1) * self.seq_len)]))
         return x, y,vol
