@@ -6,6 +6,9 @@ from model import FCN
 from tqdm import tqdm
 import numpy as np
 
+from utils.sharpe_loss import SharpeLoss
+
+
 def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, device='cuda'):
     model = model.to(device)
     best_val_loss = float('inf')
@@ -21,7 +24,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
             batch_x, batch_y = batch_x.to(device), batch_y.to(device)
             
             optimizer.zero_grad()
-            outputs = model(batch_x)
+            outputs = model(batch_x)  # [batch_size,T,num of stocks]
             loss = criterion(outputs, batch_y)
             ## Vector multiplication
             loss.backward()
@@ -73,8 +76,7 @@ def main():
     input_dim = next(iter(train_loader))[0].shape[1]  # Get input dimension from data
     model = FCN(input_dim=input_dim)
     
-    # Define loss function and optimizer
-    criterion = nn.MSELoss()
+    criterion = SharpeLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     
     # Train the model
