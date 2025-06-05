@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from dataset import TemporalDataset
-from model import FCN
+from model import FCN, create_fcn_model
 from tqdm import tqdm
 import numpy as np
 
@@ -19,7 +19,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         train_losses = []
         
         for batch_x, batch_y in tqdm(train_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Training'):
-            # batch_x shape is: [batch_size,T,num of stocks,num_of_features]
+            # batch_x shape is: [batch_size,T,num of stocks * num_of_features]
             # batch_y shape is: [batch_size,T,num of stocks]
             batch_x, batch_y = batch_x.to(device), batch_y.to(device)
             
@@ -63,24 +63,41 @@ def main():
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
-    
+    seq_len = 4
     # Initialize datasets
-    train_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=True)
-    val_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=False)
+    train_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=True,seq_len=seq_len)
+    val_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=False,seq_len=seq_len)
     
     # Create data loaders
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
     
-    # Initialize model
-    input_dim = next(iter(train_loader))[0].shape[1]  # Get input dimension from data
-    model = FCN(input_dim=input_dim)
+    # Get input dimension from data
+    sample_batch = next(iter(train_loader))[0]
+    input_dim = sample_batch.shape[-1]  # Last dimension is feature dimension
     
+    # Define model configuration
+    model_config = {
+        'input_dim': input_dim,
+        'hidden_dims': [64],  # Three hidden layers
+        'output_dim': None,  # Will be same as input_dim
+        'dropout_rate': 0.2,
+        'activation': 'gelu',  # Using GELU activation
+        'use_batch_norm': True,
+        'use_layer_norm': False
+    }
+    
+    # Initialize model
+    model = create_fcn_model(model_config)
+    print("Model architecture:")
+    print(model)
+    
+    # Define loss function and optimizer
     criterion = SharpeLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     
     # Train the model
-    # train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, device=device)
+    train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, device=device)
 
 if __name__ == '__main__':
     main()

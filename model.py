@@ -1,39 +1,113 @@
 import torch
 import torch.nn as nn
 
+
 class FCN(nn.Module):
-    def __init__(self, input_dim, hidden_dims=[64, 128, 256], num_classes=1):
+    def __init__(
+        self,
+        input_dim,
+        hidden_dims=[64, 128, 64],
+        output_dim=None,  # If None, will be same as input_dim
+        dropout_rate=0.2,
+        activation='relu',
+        use_batch_norm=True,
+        use_layer_norm=False
+    ):
+        """
+        Configurable FCN (Fully Convolutional Network)
+        
+        Args:
+            input_dim (int): Input dimension
+            hidden_dims (list): List of hidden dimensions for each layer
+            output_dim (int): Output dimension. If None, will be same as input_dim
+            dropout_rate (float): Dropout rate between layers
+            activation (str): Activation function ('relu', 'gelu', 'tanh', 'sigmoid')
+            use_batch_norm (bool): Whether to use batch normalization
+            use_layer_norm (bool): Whether to use layer normalization
+        """
         super(FCN, self).__init__()
         
+        # Set output dimension
+        self.output_dim = output_dim if output_dim is not None else input_dim
+        
+        # Get activation function
+        self.activation = {
+            'relu': nn.ReLU(),
+            'gelu': nn.GELU(),
+            'tanh': nn.Tanh(),
+            'sigmoid': nn.Sigmoid()
+        }.get(activation.lower(), nn.ReLU())
+        
+        # Build layers
         layers = []
-        current_dim = input_dim
+        prev_dim = input_dim
         
-        # Create encoder layers
+        # Add hidden layers
         for hidden_dim in hidden_dims:
-            layers.extend([
-                nn.Conv1d(current_dim, hidden_dim, kernel_size=3, padding=1),
-                nn.BatchNorm1d(hidden_dim),
-                nn.ReLU(),
-                nn.MaxPool1d(kernel_size=2, stride=2)
-            ])
-            current_dim = hidden_dim
+            # Add fully connected layer
+            layers.append(nn.Linear(prev_dim, hidden_dim))
             
-        # Create decoder layers
-        for hidden_dim in reversed(hidden_dims[:-1]):
-            layers.extend([
-                nn.ConvTranspose1d(current_dim, hidden_dim, kernel_size=2, stride=2),
-                nn.BatchNorm1d(hidden_dim),
-                nn.ReLU()
-            ])
-            current_dim = hidden_dim
+            # Add batch norm if specified
+            if use_batch_norm:
+                layers.append(nn.BatchNorm1d(hidden_dim))
             
-        # Final layer
-        layers.append(nn.Conv1d(current_dim, num_classes, kernel_size=1))
+            # Add layer norm if specified
+            if use_layer_norm:
+                layers.append(nn.LayerNorm(hidden_dim))
+            
+            # Add activation
+            layers.append(self.activation)
+            
+            # Add dropout
+            if dropout_rate > 0:
+                layers.append(nn.Dropout(dropout_rate))
+            
+            prev_dim = hidden_dim
         
-        self.fcn = nn.Sequential(*layers)
+        # Add output layer
+        layers.append(nn.Linear(prev_dim, self.output_dim))
         
+        # Create sequential model
+        self.network = nn.Sequential(*layers)
+    
     def forward(self, x):
-        # Reshape input to (batch_size, channels, sequence_length)
-        x = x.unsqueeze(2)
-        x = self.fcn(x)
-        return x.squeeze(2)  # Remove the sequence dimension 
+        """
+        Forward pass
+        
+        Args:
+            x (torch.Tensor): Input tensor of shape [batch_size, T, num_stocks, input_dim]
+        
+        Returns:
+            torch.Tensor: Output tensor of shape [batch_size, T, num_stocks]
+        """
+        batch_size, T, num_stocks, _ = x.shape
+        
+        # Reshape input to (batch_size * T * num_stocks, input_dim)
+        x = x.reshape(-1, x.shape[-1])
+        
+        # Pass through network
+        x = self.network(x)
+        
+        # Reshape output back to (batch_size, T, num_stocks)
+        x = x.reshape(batch_size, T, num_stocks)
+        
+        return x
+
+def create_fcn_model(config):
+    """
+    Helper function to create FCN model from config dictionary
+    
+    Args:
+        config (dict): Configuration dictionary with model parameters
+        Example:
+        {
+            'input_dim': 10,
+            'hidden_dims': [64, 128, 64],
+            'output_dim': None,
+            'dropout_rate': 0.2,
+            'activation': 'relu',
+            'use_batch_norm': True,
+            'use_layer_norm': False
+        }
+    """
+    return FCN(**config) 

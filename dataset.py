@@ -8,7 +8,7 @@ import os, sys
 
 
 class TemporalDataset(Dataset):
-    def __init__(self, dir_path:str, is_train:bool=True, train_months:list[int]=[1,2,3,4,5,6,7,8], val_months:list[int]=[9,10]):
+    def __init__(self,seq_len:int, dir_path:str, is_train:bool=True, train_months:list[int]=[1,2,3,4,5,6,7,8], val_months:list[int]=[9,10]):
         """
         Initialize dataset with temporal split based on months
         Args:
@@ -18,7 +18,7 @@ class TemporalDataset(Dataset):
             val_months: List of months to use for validation
         """
         dirs = os.listdir(dir_path)
-        
+        self.seq_len = seq_len
         # Initialize empty DataFrame with date column
         self.data = None
         
@@ -67,10 +67,11 @@ class TemporalDataset(Dataset):
         #TODO: can we make the date range dynamic? currently 1 month
     def __len__(self):
         #TODO: take only the amount of different months (T)
-        return len(self.features)
+        return len(self.features) // self.seq_len
     
     def __getitem__(self, idx):
         #TODO: store x as a tensor of shape [T,num of stocks,num_of_features]
-        x = torch.FloatTensor(self.features[idx])
-        y = torch.FloatTensor(np.array(self.targets[idx]))
+        #TODO: make overlap a hyper parameter in the c'tor and return x,y accordginly
+        x = torch.FloatTensor(self.features[idx * self.seq_len : ((idx+ 1) * self.seq_len),:])
+        y = torch.FloatTensor(np.array(self.targets[idx * self.seq_len : ((idx+ 1) * self.seq_len)]))
         return x, y
