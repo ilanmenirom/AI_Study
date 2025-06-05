@@ -18,7 +18,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         model.train()
         train_losses = []
         
-        for batch_x, batch_y,_ in tqdm(train_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Training'):
+        for batch_x, batch_y in tqdm(train_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Training'):
             # batch_x shape is: [batch_size,T,num of stocks * num_of_features]
             # batch_y shape is: [batch_size,T,num of stocks]
             batch_x, batch_y = batch_x.to(device), batch_y.to(device)
@@ -37,7 +37,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         val_losses = []
         
         with torch.no_grad():
-            for batch_x, batch_y,_ in tqdm(val_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Validation'):
+            for batch_x, batch_y in tqdm(val_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Validation'):
                 batch_x, batch_y = batch_x.to(device), batch_y.to(device)
                 
                 outputs = model(batch_x)
@@ -63,10 +63,17 @@ def main():
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
+<<<<<<< HEAD
+
+    # Initialize datasets
+    train_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=True,window_span_for_volatile=5)
+    val_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=False,window_span_for_volatile=5)
+=======
     seq_len = 4
     # Initialize datasets
-    train_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=True,seq_len=seq_len,window_span_for_volatile=5)
-    val_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=False,seq_len=seq_len,window_span_for_volatile=5)
+    train_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=True,seq_len=seq_len)
+    val_dataset = TemporalDataset(dir_path=r"./Dataset", is_train=False,seq_len=seq_len)
+>>>>>>> main
     
     # Create data loaders
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)

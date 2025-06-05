@@ -8,7 +8,11 @@ import os, sys
 
 
 class TemporalDataset(Dataset):
-    def __init__(self,seq_len:int, dir_path:str, is_train:bool=True,window_span_for_volatile:int=5, train_months:list[int]=[1,2,3,4,5,6,7,8], val_months:list[int]=[9,10]):
+<<<<<<< HEAD
+    def __init__(self, dir_path:str, is_train:bool=True,window_span_for_volatile:int=5, train_months:list[int]=[1,2,3,4,5,6,7,8], val_months:list[int]=[9,10]):
+=======
+    def __init__(self,seq_len:int, dir_path:str, is_train:bool=True, train_months:list[int]=[1,2,3,4,5,6,7,8], val_months:list[int]=[9,10]):
+>>>>>>> main
         """
         Initialize dataset with temporal split based on months
         Args:
@@ -18,7 +22,11 @@ class TemporalDataset(Dataset):
             val_months: List of months to use for validation
         """
         dirs = os.listdir(dir_path)
+<<<<<<< HEAD
+
+=======
         self.seq_len = seq_len
+>>>>>>> main
         # Initialize empty DataFrame with date column
         self.data = None
 
@@ -74,8 +82,13 @@ class TemporalDataset(Dataset):
     
     def __getitem__(self, idx):
         #TODO: store x as a tensor of shape [T,num of stocks,num_of_features]
+<<<<<<< HEAD
+        x = torch.FloatTensor(self.features[idx])
+        y = torch.FloatTensor(np.array(self.targets[idx]))
+        vol = torch.FloatTensor(np.array(self.volatiles[idx]))
+=======
         #TODO: make overlap a hyper parameter in the c'tor and return x,y accordginly
         x = torch.FloatTensor(self.features[idx * self.seq_len : ((idx+ 1) * self.seq_len),:])
         y = torch.FloatTensor(np.array(self.targets[idx * self.seq_len : ((idx+ 1) * self.seq_len)]))
-        vol = torch.FloatTensor(np.array(self.volatiles[idx * self.seq_len : ((idx+ 1) * self.seq_len)]))
-        return x, y,vol
+>>>>>>> main
+        return x, y
