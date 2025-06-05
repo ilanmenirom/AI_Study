@@ -60,6 +60,9 @@ class TemporalDataset(Dataset):
         non_features_col = target_cols + target_volatile_cols
         feature_cols = [col for col in self.data.columns if col not in ['date', 'month'] and col not in non_features_col]
 
+        # Ensure features, targets, and volatiles are not empty
+        self.data = self.data.dropna(ignore_index=True)
+
         self.features = self.data[feature_cols].values
         self.targets = self.data[target_cols].values
         self.volatiles = self.data[target_volatile_cols].values
@@ -78,4 +81,4 @@ class TemporalDataset(Dataset):
         x = torch.FloatTensor(self.features[idx * self.seq_len : ((idx+ 1) * self.seq_len),:])
         y = torch.FloatTensor(np.array(self.targets[idx * self.seq_len : ((idx+ 1) * self.seq_len)]))
         vol = torch.FloatTensor(np.array(self.volatiles[idx * self.seq_len : ((idx+ 1) * self.seq_len)]))
-        return x, y,vol
+        return x, y, vol
