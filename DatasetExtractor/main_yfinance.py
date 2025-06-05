@@ -41,13 +41,13 @@ def download_stock_data(symbols, start_date, end_date):
         df = df.dropna()
         
         # Save to CSV
-        df.to_csv(f'Dataset/{symbol}.csv', index=False)
+        df.to_csv(f'../Dataset/{symbol}.csv', index=False)
         
         print(f"Downloaded and saved data for {symbol}")
 
 if __name__ == "__main__":
     # Example usage
-    symbols = ['AAPL', 'GOOGL', 'MSFT' ,"GC=F","BTC-USD"]  # Add your symbols here
+    symbols = ['AAPL', 'GOOGL', 'MSFT' ,"GC=F","BTC-USD","TSLA"]  # Add your symbols here
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365)  # Last year of data
     

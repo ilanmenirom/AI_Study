@@ -78,7 +78,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     
     # Train the model
-    train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, device=device)
+    # train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=10, device=device)
 
 if __name__ == '__main__':
     main()
