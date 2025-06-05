@@ -6,10 +6,10 @@ class FCN(nn.Module):
     def __init__(
         self,
         input_dim,
-        hidden_dims=[64, 128, 64],
-        output_dim=None,  # If None, will be same as input_dim
-        dropout_rate=0.2,
-        activation='relu',
+        hidden_dims,
+        output_dim,
+        dropout_rate,
+        activation,
         use_batch_norm=True,
         use_layer_norm=False
     ):
@@ -75,12 +75,12 @@ class FCN(nn.Module):
         Forward pass
         
         Args:
-            x (torch.Tensor): Input tensor of shape [batch_size, T, num_stocks, input_dim]
+            x (torch.Tensor): Input tensor of shape [batch_size, T, num_features]
         
         Returns:
             torch.Tensor: Output tensor of shape [batch_size, T, num_stocks]
         """
-        batch_size, T, num_stocks, _ = x.shape
+        batch_size, T, _ = x.shape
         
         # Reshape input to (batch_size * T * num_stocks, input_dim)
         x = x.reshape(-1, x.shape[-1])
@@ -89,7 +89,7 @@ class FCN(nn.Module):
         x = self.network(x)
         
         # Reshape output back to (batch_size, T, num_stocks)
-        x = x.reshape(batch_size, T, num_stocks)
+        x = x.reshape(batch_size, T, self.output_dim)
         
         return x
 

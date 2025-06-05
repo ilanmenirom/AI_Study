@@ -21,7 +21,7 @@ class SharpeLoss(nn.Module):
         std_returns = torch.std(portfolio_returns, dim=1)  # [batch_size]
         
         # Add epsilon to std to avoid division by zero
-        if self.eps > std_returns * 0.001:
+        if self.eps > min(std_returns) * 0.001:
             raise ValueError("Epsilon is too large, consider reducing it")
 
         std_returns = std_returns + self.eps
