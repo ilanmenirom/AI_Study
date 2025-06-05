@@ -72,17 +72,17 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
     
-    # Get input dimension from data
-    sample_batch = next(iter(train_loader))[0]
-    input_dim = sample_batch.shape[-1]  # Last dimension is feature dimension
-    
+    # Get input and output dimensions from data
+    sample_x, sample_y, _ = next(iter(train_loader))
+    input_dim, output_dim = sample_x.shape[-1], sample_y.shape[-1]
+
     # Define model configuration
     model_config = {
         'input_dim': input_dim,
-        'hidden_dims': [64],  # Three hidden layers
-        'output_dim': None,  # Will be same as input_dim
+        'hidden_dims': [64],
+        'output_dim': output_dim,
         'dropout_rate': 0.2,
-        'activation': 'gelu',  # Using GELU activation
+        'activation': 'relu',
         'use_batch_norm': True,
         'use_layer_norm': False
     }
