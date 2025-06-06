@@ -94,8 +94,8 @@ def main():
     
     # Define loss function and optimizer
     criterion = SharpeLoss(
-        target_volatility=0.1,
-        cost_rate=0.0001,
+        target_volatility=None,
+        cost_rate=None,
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     

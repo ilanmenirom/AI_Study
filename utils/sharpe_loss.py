@@ -21,16 +21,17 @@ class SharpeLoss(nn.Module):
         self.eps = eps
 
     def forward(self, weights, returns, volatility_estimate=None):
-        # Re-weight returns by the volatility estimate if required
-        if self.target_volatility and (volatility_estimate is not None):
-            weights = self.target_volatility * weights / (volatility_estimate + 1e-14)
-
         # Ensure weights are non-negative and sum to 1 for each day
         # weights shape: [batch_size, T, num_stocks]
         # returns shape: [batch_size, T, num_stocks]
-        weights = torch.softmax(
-            weights, dim=-1
-        )  # TODO: ensure this is not done in the model
+
+        # TODO: ensure this is not done in the model
+        #  (I actually think it should be done in the model)
+        weights = torch.softmax(weights, dim=-1)
+
+        # Re-weight returns by the volatility estimate if required
+        if self.target_volatility and (volatility_estimate is not None):
+            weights = self.target_volatility * weights / (volatility_estimate + 1e-14)
 
         # Calculate portfolio returns for each timestep
         # Sum across stocks dimension: [batch_size, T]
