@@ -18,14 +18,14 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         model.train()
         train_losses = []
         
-        for batch_x, batch_y,_ in tqdm(train_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Training'):
+        for batch_x, batch_y, batch_v in tqdm(train_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Training'):
             # batch_x shape is: [batch_size,T,num of stocks * num_of_features]
             # batch_y shape is: [batch_size,T,num of stocks]
-            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+            batch_x, batch_y, batch_v = batch_x.to(device), batch_y.to(device), batch_v.to(device)
             
             optimizer.zero_grad()
             outputs = model(batch_x)  # [batch_size,T,num of stocks]
-            loss = criterion(outputs, batch_y)
+            loss = criterion(outputs, batch_y, batch_v)
             ## Vector multiplication
             loss.backward()
             optimizer.step()
@@ -37,11 +37,11 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         val_losses = []
         
         with torch.no_grad():
-            for batch_x, batch_y,_ in tqdm(val_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Validation'):
-                batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+            for batch_x, batch_y, batch_v in tqdm(val_loader, desc=f'Epoch {epoch+1}/{num_epochs} - Validation'):
+                batch_x, batch_y, batch_v = batch_x.to(device), batch_y.to(device), batch_v.to(device)
                 
                 outputs = model(batch_x)
-                loss = criterion(outputs, batch_y)
+                loss = criterion(outputs, batch_y, batch_v)
                 val_losses.append(loss.item())
         
         avg_train_loss = np.mean(train_losses)
@@ -93,7 +93,10 @@ def main():
     print(model)
     
     # Define loss function and optimizer
-    criterion = SharpeLoss()
+    criterion = SharpeLoss(
+        target_volatility=None,
+        cost_rate=None,
+    )
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     
     # Train the model
