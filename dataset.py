@@ -8,14 +8,15 @@ import os, sys
 
 
 class TemporalDataset(Dataset):
-    def __init__(self,seq_len:int, dir_path:str, is_train:bool=True,window_span_for_volatile:int=5, train_months:list[int]=[1,2,3,4,5,6,7,8], val_months:list[int]=[9,10]):
+    def __init__(self, seq_len:int, dir_path:str, is_train:bool=True, window_span_for_volatile:int=5, 
+                 train_ratio:float=0.8, random_seed:int=42):
         """
-        Initialize dataset with temporal split based on months
+        Initialize dataset with random split
         Args:
             dir_path: Path to directory containing CSV files
-            is_train: If True, load training months, else load validation months
-            train_months: List of months to use for training
-            val_months: List of months to use for validation
+            is_train: If True, load training split, else load validation split
+            train_ratio: Ratio of data to use for training (0.8 = 80% train, 20% val)
+            random_seed: Random seed for reproducible splits
         """
         dirs = os.listdir(dir_path)
         self.seq_len = seq_len
@@ -44,16 +45,8 @@ class TemporalDataset(Dataset):
                     # Merge on 'date' column. This assumes 'date' column is consistent across all CSVs
                     self.data = pd.merge(self.data, temp_df, on='date', how='inner')
 
-        # Convert date and create month column
+        # Convert date and create day column
         self.data['date'] = pd.to_datetime(self.data['date'])
-        self.data['month'] = self.data['date'].dt.month
-        # Split based on months
-        if is_train:
-            self.data = self.data[self.data['month'].isin(train_months)]
-        else:
-            self.data = self.data[self.data['month'].isin(val_months)]
-
-        # Separate features and targets
         self.data['day'] = self.data['date'].dt.dayofweek
         target_cols = [col for col in self.data.columns if '_target' in col]
         target_volatile_cols = [col for col in self.data.columns if '_volatile' in col]
@@ -70,15 +63,24 @@ class TemporalDataset(Dataset):
         # Normalize features
         self.scaler = StandardScaler()
         self.features = self.scaler.fit_transform(self.features)
-        #TODO: can we make the date range dynamic? currently 1 month
+        
+        # Create random split indices
+        np.random.seed(random_seed)
+        total_sequences = len(self.features) // self.seq_len
+        indices = np.random.permutation(total_sequences)
+        
+        train_size = int(total_sequences * train_ratio)
+        if is_train:
+            self.indices = indices[:train_size]
+        else:
+            self.indices = indices[train_size:]
     def __len__(self):
-        #TODO: take only the amount of different months (T)
-        return len(self.features) // self.seq_len
+        return len(self.indices)
     
     def __getitem__(self, idx):
-        #TODO: store x as a tensor of shape [T,num of stocks,num_of_features]
-        #TODO: make overlap a hyper parameter in the c'tor and return x,y accordginly
-        x = torch.FloatTensor(self.features[idx * self.seq_len : ((idx+ 1) * self.seq_len),:])
-        y = torch.FloatTensor(np.array(self.targets[idx * self.seq_len : ((idx+ 1) * self.seq_len)]))
-        vol = torch.FloatTensor(np.array(self.volatiles[idx * self.seq_len : ((idx+ 1) * self.seq_len)]))
+        # Use the random index to get the sequence
+        sequence_idx = self.indices[idx]
+        x = torch.FloatTensor(self.features[sequence_idx * self.seq_len : ((sequence_idx + 1) * self.seq_len),:])
+        y = torch.FloatTensor(np.array(self.targets[sequence_idx * self.seq_len : ((sequence_idx + 1) * self.seq_len)]))
+        vol = torch.FloatTensor(np.array(self.volatiles[sequence_idx * self.seq_len : ((sequence_idx + 1) * self.seq_len)]))
         return x, y, vol
